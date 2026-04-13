@@ -31,8 +31,24 @@ const BookDetails = () => {
       </div>
     );
   }
+  const [storeBook, setStoreBook] = useState([]);
+  const handleMarkAsRead = (currentBook) => {
+    // Step-1: Store BookID
+    // Step2: Where to store
+    //step=3: array
+    //step-4:if the book already exist, show an alert
+    //step-5: if not, add the book in array or collectio & view the design
+    console.log(bookId);
 
-  const handleMarkAsRead = () => {};
+    const isExistBook = storeBook.find(
+      (book) => book.bookId === currentBook.bookId,
+    );
+    if (isExistBook) {
+      alert("The book is already exist");
+    } else {
+      setStoreBook([...storeBook, currentBook]);
+    }
+  };
 
   // 5. Once data is found, render the UI using the dynamic 'book' state
   return (
@@ -112,7 +128,10 @@ const BookDetails = () => {
           </div>
 
           <div className="flex gap-4">
-            <button className="btn btn-outline border-base-300 text-base-content px-8 hover:bg-base-200 hover:border-base-300 bg-transparent font-bold">
+            <button
+              onClick={() => handleMarkAsRead(bookId)}
+              className="btn btn-outline border-base-300 text-base-content px-8 hover:bg-base-200 hover:border-base-300 bg-transparent font-bold"
+            >
               Mark as Read
             </button>
             <button className="btn bg-[#59C6D2] text-white border-none px-8 hover:bg-[#4ab0bc] font-bold">
