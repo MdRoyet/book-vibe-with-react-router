@@ -1,29 +1,68 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css"; // Don't forget the CSS!
 
 const BookDetails = () => {
-  // 1. Grab the ID from the URL (e.g., "8")
-  // Note: Ensure your route in main.jsx is set up like path: "/book/:bookId"
   const { bookId } = useParams();
+  const [book, setBook] = useState(null);
 
-  // 2. Set up state to hold our specific book data
-  const [book, setBook] = useState("");
-
-  // 3. Fetch data when the component loads
   useEffect(() => {
     fetch("/booksData.json")
       .then((res) => res.json())
       .then((data) => {
-        // Find the book whose ID matches the URL parameter.
-        // Important: bookId from the URL is a String ("8"), but in your JSON it's a Number (8).
-        // We use parseInt() to convert the URL string to a number so they match perfectly.
         const foundBook = data.find((b) => b.bookId === parseInt(bookId));
         setBook(foundBook);
       })
       .catch((err) => console.error("Error fetching books:", err));
-  }, [bookId]); // Re-run if the URL ID changes
+  }, [bookId]);
 
-  // 4. Show a loading indicator while the data is being fetched
+  // --- ADD TO READ FUNCTION ---
+  const handleMarkAsRead = (currentBook) => {
+    // 1. Get existing saved books from LocalStorage (or an empty array if none exist)
+    const savedReadBooks = JSON.parse(localStorage.getItem("readBooks")) || [];
+
+    // 2. Check if it already exists
+    const isExist = savedReadBooks.find((b) => b.bookId === currentBook.bookId);
+
+    if (isExist) {
+      // 3. Show Warning Toast
+      toast.warn("You have already read this book!");
+    } else {
+      // 4. Add to array, save back to LocalStorage, and Show Success Toast
+      savedReadBooks.push(currentBook);
+      localStorage.setItem("readBooks", JSON.stringify(savedReadBooks));
+      toast.success("Book added to Read list successfully!");
+    }
+  };
+
+  // --- ADD TO WISHLIST FUNCTION ---
+  const handleAddToWishlist = (currentBook) => {
+    const savedWishlist =
+      JSON.parse(localStorage.getItem("wishlistBooks")) || [];
+
+    // Optional (but recommended) logic: You usually shouldn't wishlist a book you've already read!
+    const savedReadBooks = JSON.parse(localStorage.getItem("readBooks")) || [];
+    const isAlreadyRead = savedReadBooks.find(
+      (b) => b.bookId === currentBook.bookId,
+    );
+
+    if (isAlreadyRead) {
+      toast.error("You have already read this book!");
+      return;
+    }
+
+    const isExist = savedWishlist.find((b) => b.bookId === currentBook.bookId);
+
+    if (isExist) {
+      toast.warn("This book is already in your Wishlist!");
+    } else {
+      savedWishlist.push(currentBook);
+      localStorage.setItem("wishlistBooks", JSON.stringify(savedWishlist));
+      toast.success("Book added to Wishlist!");
+    }
+  };
+
   if (!book) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -31,31 +70,15 @@ const BookDetails = () => {
       </div>
     );
   }
-  const [storeBook, setStoreBook] = useState([]);
-  const handleMarkAsRead = (currentBook) => {
-    // Step-1: Store BookID
-    // Step2: Where to store
-    //step=3: array
-    //step-4:if the book already exist, show an alert
-    //step-5: if not, add the book in array or collectio & view the design
-    console.log(bookId);
 
-    const isExistBook = storeBook.find(
-      (book) => book.bookId === currentBook.bookId,
-    );
-    if (isExistBook) {
-      alert("The book is already exist");
-    } else {
-      setStoreBook([...storeBook, currentBook]);
-    }
-  };
-
-  // 5. Once data is found, render the UI using the dynamic 'book' state
   return (
     <div className="max-w-7xl mx-auto px-4 py-12">
+      {/* ToastContainer is required anywhere you want toasts to pop up */}
+      <ToastContainer position="top-center" autoClose={3000} />
+
       <div className="flex flex-col lg:flex-row gap-10 lg:gap-16">
         {/* --- LEFT COLUMN: IMAGE --- */}
-        <div className="w-full lg:w-1/2 bg-[#131313]/[0.05] rounded-3xl p-12 flex justify-center items-center h-auto lg:h-[800px]">
+        <div className="w-full lg:w-1/2 bg-[#131313]/[0.05] rounded-3xl p-12 flex justify-center items-center h-auto lg:h-[700px]">
           <img
             src={book.image}
             alt={book.bookName}
@@ -73,11 +96,9 @@ const BookDetails = () => {
           </p>
 
           <div className="border-t border-base-300 w-full mb-4"></div>
-
           <p className="text-lg text-gray-500 font-medium mb-4">
             {book.category}
           </p>
-
           <div className="border-t border-base-300 w-full mb-6"></div>
 
           <p className="text-gray-500 leading-relaxed mb-8">
@@ -85,7 +106,7 @@ const BookDetails = () => {
             {book.review}
           </p>
 
-          {/* Dynamic Tags */}
+          {/* Tags */}
           <div className="flex items-center gap-4 mb-8">
             <span className="font-bold text-base-content">Tag</span>
             {book.tags.map((tag, index) => (
@@ -100,42 +121,48 @@ const BookDetails = () => {
 
           <div className="border-t border-base-300 w-full mb-6"></div>
 
+          {/* Details Grid */}
           <div className="flex flex-col gap-3 mb-8">
             <div className="grid grid-cols-2 md:grid-cols-3">
               <span className="text-gray-500">Number of Pages:</span>
-              <span className="font-semibold text-base-content col-span-1 md:col-span-2">
+              <span className="font-semibold text-base-content">
                 {book.totalPages}
               </span>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-3">
               <span className="text-gray-500">Publisher:</span>
-              <span className="font-semibold text-base-content col-span-1 md:col-span-2">
+              <span className="font-semibold text-base-content">
                 {book.publisher}
               </span>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-3">
               <span className="text-gray-500">Year of Publishing:</span>
-              <span className="font-semibold text-base-content col-span-1 md:col-span-2">
+              <span className="font-semibold text-base-content">
                 {book.yearOfPublishing}
               </span>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-3">
               <span className="text-gray-500">Rating:</span>
-              <span className="font-semibold text-base-content col-span-1 md:col-span-2">
+              <span className="font-semibold text-base-content">
                 {book.rating}
               </span>
             </div>
           </div>
 
+          {/* Action Buttons */}
           <div className="flex gap-4">
             <button
-              onClick={() => handleMarkAsRead(bookId)}
+              // Note: Passing the ENTIRE book object now, not just the ID
+              onClick={() => handleMarkAsRead(book)}
               className="btn btn-outline border-base-300 text-base-content px-8 hover:bg-base-200 hover:border-base-300 bg-transparent font-bold"
             >
-              Mark as Read
+              Read
             </button>
-            <button className="btn bg-[#59C6D2] text-white border-none px-8 hover:bg-[#4ab0bc] font-bold">
-              Add to Wishlist
+            <button
+              onClick={() => handleAddToWishlist(book)}
+              className="btn bg-[#59C6D2] text-white border-none px-8 hover:bg-[#4ab0bc] font-bold"
+            >
+              Wishlist
             </button>
           </div>
         </div>
