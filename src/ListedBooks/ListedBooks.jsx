@@ -1,35 +1,55 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router"; // For the "View Details" button
+import { Link } from "react-router";
 
 const ListedBooks = () => {
-  // 1. State for our books and the active tab
   const [readBooks, setReadBooks] = useState([]);
   const [wishlistBooks, setWishlistBooks] = useState([]);
-  const [activeTab, setActiveTab] = useState("read"); // 'read' or 'wishlist'
+  const [activeTab, setActiveTab] = useState("read");
+  const [sortBy, setSortBy] = useState("");
 
-  // 2. Retrieve data from LocalStorage when the page loads
   useEffect(() => {
     const storedRead = JSON.parse(localStorage.getItem("readBooks")) || [];
     const storedWishlist =
       JSON.parse(localStorage.getItem("wishlistBooks")) || [];
-
     setReadBooks(storedRead);
     setWishlistBooks(storedWishlist);
   }, []);
 
-  // 3. Determine which array to display based on the active tab
+  // 1. Get the data for the CURRENT tab
   const displayBooks = activeTab === "read" ? readBooks : wishlistBooks;
+
+  // 2. Sort the data safely
+  const sortedBooks = [...displayBooks].sort((a, b) => {
+    if (sortBy === "rating") {
+      // Using Number() ensures it sorts mathematically, even if LocalStorage saved it as a string
+      return Number(b.rating) - Number(a.rating);
+    } else if (sortBy === "pages") {
+      return Number(b.totalPages) - Number(a.totalPages);
+    } else if (sortBy === "year") {
+      return Number(b.yearOfPublishing) - Number(a.yearOfPublishing);
+    }
+    return 0; // Default (No sort)
+  });
+
+  // 3. Helper function to handle clicks & close the daisyUI dropdown
+  const handleSortClick = (sortType) => {
+    setSortBy(sortType);
+    // This simple trick removes focus from the dropdown, causing it to close automatically
+    const elem = document.activeElement;
+    if (elem) {
+      elem?.blur();
+    }
+  };
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
-      {/* --- HEADER --- */}
       <div className="bg-[#131313]/[0.05] py-8 rounded-3xl mb-8 flex justify-center">
         <h1 className="text-3xl font-bold text-base-content font-sans">
           Books
         </h1>
       </div>
 
-      {/* --- SORT DROPDOWN (UI Only for now) --- */}
+      {/* --- SORT DROPDOWN --- */}
       <div className="flex justify-center mb-12">
         <div className="dropdown dropdown-bottom">
           <div
@@ -37,7 +57,13 @@ const ListedBooks = () => {
             role="button"
             className="btn bg-[#23BE0A] text-white hover:bg-[#1fa109] border-none px-8"
           >
-            Sort By
+            {sortBy === "rating"
+              ? "Rating"
+              : sortBy === "pages"
+                ? "Number of pages"
+                : sortBy === "year"
+                  ? "Publisher year"
+                  : "Sort By"}
             <svg
               xmlns="http://www.w3.org/2000/svg"
               className="h-5 w-5 ml-2"
@@ -53,25 +79,29 @@ const ListedBooks = () => {
               />
             </svg>
           </div>
+          {/* Changed <a> to <button> for better click handling in React */}
           <ul
             tabIndex={0}
             className="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52 mt-2"
           >
             <li>
-              <a>Rating</a>
+              <button onClick={() => handleSortClick("rating")}>Rating</button>
             </li>
             <li>
-              <a>Number of pages</a>
+              <button onClick={() => handleSortClick("pages")}>
+                Number of pages
+              </button>
             </li>
             <li>
-              <a>Publisher year</a>
+              <button onClick={() => handleSortClick("year")}>
+                Publisher year
+              </button>
             </li>
           </ul>
         </div>
       </div>
 
       {/* --- TABS --- */}
-      {/* We use daisyUI's 'tabs-lifted' to match the exact border style from your screenshot */}
       <div className="flex items-center mb-8 border-b border-base-300">
         <div role="tablist" className="tabs tabs-lifted justify-start w-full">
           <a
@@ -91,19 +121,19 @@ const ListedBooks = () => {
         </div>
       </div>
 
-      {/* --- BOOK CARDS --- */}
+      {/* --- BOOK LIST --- */}
       <div className="flex flex-col gap-6">
-        {displayBooks.length === 0 ? (
+        {/* We map over sortedBooks, which will automatically update when you change tabs OR change the sort */}
+        {sortedBooks.length === 0 ? (
           <div className="text-center py-10 text-gray-500 text-xl">
             No books found in this list yet!
           </div>
         ) : (
-          displayBooks.map((book) => (
+          sortedBooks.map((book) => (
             <div
               key={book.bookId}
               className="flex flex-col md:flex-row border border-base-300 rounded-2xl p-6 gap-8 hover:shadow-md transition-shadow bg-base-100"
             >
-              {/* Image Container */}
               <div className="bg-[#131313]/[0.05] rounded-2xl w-full md:w-60 h-60 flex justify-center items-center flex-shrink-0 p-4">
                 <img
                   src={book.image}
@@ -112,7 +142,6 @@ const ListedBooks = () => {
                 />
               </div>
 
-              {/* Content Container */}
               <div className="flex flex-col flex-grow justify-center">
                 <h2 className="text-3xl font-bold font-serif text-base-content mb-2">
                   {book.bookName}
@@ -121,7 +150,6 @@ const ListedBooks = () => {
                   By : {book.author}
                 </p>
 
-                {/* Tags and Year */}
                 <div className="flex flex-wrap items-center gap-4 mb-4">
                   <div className="flex items-center gap-3">
                     <span className="font-bold text-base-content">Tag</span>
@@ -135,7 +163,6 @@ const ListedBooks = () => {
                     ))}
                   </div>
                   <div className="flex items-center gap-2 text-gray-500 font-medium">
-                    {/* Location/Calendar Icon */}
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       className="h-5 w-5"
@@ -160,10 +187,8 @@ const ListedBooks = () => {
                   </div>
                 </div>
 
-                {/* Publisher and Pages */}
                 <div className="flex flex-wrap items-center gap-6 text-gray-500 font-medium mb-4">
                   <div className="flex items-center gap-2">
-                    {/* Publisher User Icon */}
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       className="h-5 w-5"
@@ -181,7 +206,6 @@ const ListedBooks = () => {
                     <span>Publisher: {book.publisher}</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    {/* Document Icon */}
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       className="h-5 w-5"
@@ -202,7 +226,6 @@ const ListedBooks = () => {
 
                 <div className="border-t border-base-300 w-full my-2"></div>
 
-                {/* Footer Badges and Button */}
                 <div className="flex flex-wrap items-center gap-4 mt-2">
                   <span className="px-5 py-2 text-[#328EFF] bg-[#328EFF]/10 rounded-full text-sm font-semibold">
                     Category: {book.category}
@@ -210,10 +233,8 @@ const ListedBooks = () => {
                   <span className="px-5 py-2 text-[#FFAC33] bg-[#FFAC33]/10 rounded-full text-sm font-semibold">
                     Rating: {book.rating}
                   </span>
-
-                  {/* View Details Button pointing back to the dynamic route */}
                   <Link
-                    to={`/book/${book.bookId}`}
+                    to={`/BookDetails/${book.bookId}`}
                     className="btn bg-[#23BE0A] text-white hover:bg-[#1fa109] border-none rounded-full px-8 ml-auto"
                   >
                     View Details

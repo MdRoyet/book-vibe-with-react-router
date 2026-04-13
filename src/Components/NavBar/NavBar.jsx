@@ -30,7 +30,7 @@ const NavBar = () => {
       </li>
       <li>
         <NavLink
-          to="/404"
+          to="/pages-to-read"
           className={({ isActive }) =>
             isActive
               ? "text-[#23BE0A] font-semibold bg-transparent hover:bg-transparent"
