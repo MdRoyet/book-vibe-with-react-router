@@ -5,7 +5,7 @@ import bookImg from "../../assets/pngwing 1.png"; // Adjust path if needed
 const Banner = () => {
   return (
     // Outer container for spacing and centering
-    <div className="flex items-center justify-center p-4 md:p-12">
+    <div className="flex items-center justify-center p-4 md:p-12 container mx-auto">
       {/* 2. The Rounded Card Container */}
       {/* We use a custom light gray background to match the image precisely */}
       <div className="hero bg-[#131313]/[0.05] rounded-3xl min-h-[550px] p-8 md:p-20">

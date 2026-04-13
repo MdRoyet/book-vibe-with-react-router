@@ -44,7 +44,7 @@ const NavBar = () => {
   );
 
   return (
-    <div className="navbar bg-base-100 py-4 shadow-sm">
+    <div className="navbar bg-base-100 py-4 shadow-sm container mx-auto">
       <div className="navbar-start">
         <h2 className="font-extrabold text-2xl text-base-content">Book Vibe</h2>
       </div>
